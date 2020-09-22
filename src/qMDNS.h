@@ -9,6 +9,7 @@
 #include <QObject>
 
 class QHostInfo;
+class QTcpSocket;
 class QUdpSocket;
 class QHostAddress;
 
@@ -50,12 +51,19 @@ class qMDNS : public QObject {
 
   private slots:
     void onReadyRead();
+#ifdef Q_OS_LINUX
+    void onRouteEvent();
+#endif
     void readQuery (const QByteArray& data);
     void sendPacket (const QByteArray& data);
     void readResponse (const QByteArray& data);
     void sendResponse (const quint16 query_id);
 
   private:
+    void initSockets();
+#ifdef Q_OS_LINUX
+    QTcpSocket* openNetlinkSocket (QObject* parent);
+#endif
     QString getHostNameFromResponse (const QByteArray& data);
     QString getIPv4FromResponse (const QByteArray& data, const QString& host);
     QStringList getIPv6FromResponse (const QByteArray& data, const QString& host);
@@ -67,4 +75,7 @@ class qMDNS : public QObject {
     QString m_hostName;
     QUdpSocket* m_IPv4Socket;
     QUdpSocket* m_IPv6Socket;
+#ifdef Q_OS_LINUX
+    QTcpSocket* m_NetlinkSocket;
+#endif
 };
